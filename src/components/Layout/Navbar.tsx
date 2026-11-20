@@ -45,17 +45,17 @@ const Navbar = () => {
   
         <div className="hidden items-center gap-3 md:flex">
           <Link
-            href="/login"
+            href="/Signin"
             className="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100"
           >
-            Login
+            SignIn
           </Link>
 
           <Link
-            href="/register"
+            href="/Signup"
             className="rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-blue-700"
           >
-            Get Started
+            SignUp
           </Link>
         </div>
 
