@@ -1,59 +1,110 @@
+"use client";
+
 import Link from "next/link";
-import { Wrench } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Wrench, Menu, X } from "lucide-react";
+import { useState } from "react";
 
 const Navbar = () => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  const navLinks = [
+    { name: "Home", href: "/" },
+    { name: "Services", href: "/services" },
+    { name: "About", href: "/about" },
+    { name: "Contact", href: "/contact" },
+  ];
+
   return (
-    <header className="sticky top-0 z-50 border-b bg-white">
-      <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
+   <nav className="sticky top-0 z-50 border-b bg-white">
+      <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-6">
+
         
-        {/* Logo */}
         <Link href="/" className="flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-600 text-white">
-            <Wrench size={20} />
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-white">
+            <Wrench size={22} />
           </div>
 
-          <span className="text-xl font-bold tracking-tight text-gray-900">
+          <span className="text-2xl font-bold tracking-tight text-gray-900">
             Fix<span className="text-blue-600">Mate</span>
           </span>
         </Link>
 
-        {/* Navigation Links */}
+        {/* Desktop Navigation */}
         <div className="hidden items-center gap-8 md:flex">
-          <Link href="/" className="text-sm font-medium text-gray-700 hover:text-blue-600 transition">
-            Home
+          {navLinks.map((link) => (
+            <Link
+              key={link.name}
+              href={link.href}
+              className="text-sm font-medium text-gray-700 transition hover:text-blue-600"
+            >
+              {link.name}
+            </Link>
+          ))}
+        </div>
+
+  
+        <div className="hidden items-center gap-3 md:flex">
+          <Link
+            href="/login"
+            className="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100"
+          >
+            Login
           </Link>
 
-          <Link href="/services" className="text-sm font-medium text-gray-700 hover:text-blue-600 transition">
-            Services
-          </Link>
-
-          <Link href="/about" className="text-sm font-medium text-gray-700 hover:text-blue-600 transition">
-            About
-          </Link>
-
-          <Link href="/contact" className="text-sm font-medium text-gray-700 hover:text-blue-600 transition">
-            Contact
+          <Link
+            href="/register"
+            className="rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-blue-700"
+          >
+            Get Started
           </Link>
         </div>
 
-        {/* Buttons */}
-        <div className="flex items-center gap-3">
-          <Link href="/login">
-            <Button variant="ghost" className="font-medium">
-              Login
-            </Button>
-          </Link>
+        
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          className="rounded-md p-2 text-gray-700 md:hidden"
+          aria-label="Toggle menu"
+        >
+          {isOpen ? <X size={24} /> : <Menu size={24} />}
+        </button>
+      </div>
 
-          <Link href="/register">
-            <Button className="bg-blue-600 hover:bg-blue-700 text-white">
-              Get Started
-            </Button>
-          </Link>
+      
+      {isOpen && (
+        <div className="border-t bg-white px-6 py-4 md:hidden">
+          <div className="flex flex-col gap-4">
+            {navLinks.map((link) => (
+              <Link
+                key={link.name}
+                href={link.href}
+                onClick={() => setIsOpen(false)}
+                className="text-sm font-medium text-gray-700 transition hover:text-blue-600"
+              >
+                {link.name}
+              </Link>
+            ))}
+
+            <div className="flex gap-3 border-t pt-4">
+              <Link
+                href="/login"
+                onClick={() => setIsOpen(false)}
+                className="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
+              >
+                Login
+              </Link>
+
+              <Link
+                href="/register"
+                onClick={() => setIsOpen(false)}
+                className="rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-700"
+              >
+                Get Started
+              </Link>
+            </div>
+          </div>
         </div>
-
-      </nav>
-    </header>
+      )}
+    </nav>
   );
 };
 
