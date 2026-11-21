@@ -2,7 +2,13 @@
 
 import { useSession } from "@/lib/auth-client";
 import { useEffect, useState } from "react";
-import { Wrench, PlusCircle, Loader2 } from "lucide-react";
+import {
+  Wrench,
+  PlusCircle,
+  Loader2,
+  Pencil,
+  Trash2,
+} from "lucide-react";
 import Link from "next/link";
 
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -25,10 +31,14 @@ const MyServicesPage = () => {
 
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchServices = async () => {
-      if (!session?.user?.email) return;
+      if (!session?.user?.email) {
+        setLoading(false);
+        return;
+      }
 
       try {
         const response = await fetch(
@@ -51,6 +61,7 @@ const MyServicesPage = () => {
     fetchServices();
   }, [session?.user?.email]);
 
+  // Status Badge
   const getStatusVariant = (status: Service["status"]) => {
     switch (status) {
       case "approved":
@@ -59,6 +70,42 @@ const MyServicesPage = () => {
         return "destructive";
       default:
         return "secondary";
+    }
+  };
+
+  // Delete Service
+  const handleDelete = async (id: string) => {
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete this service?"
+    );
+
+    if (!confirmDelete) return;
+
+    setDeletingId(id);
+
+    try {
+      const response = await fetch(
+        `http://localhost:5000/api/services/${id}`,
+        {
+          method: "DELETE",
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to delete service");
+      }
+
+      // Remove deleted service from UI
+      setServices((prevServices) =>
+        prevServices.filter((service) => service._id !== id)
+      );
+
+      alert("Service deleted successfully!");
+    } catch (error) {
+      console.error("Error deleting service:", error);
+      alert("Failed to delete service. Please try again.");
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -75,22 +122,20 @@ const MyServicesPage = () => {
 
         <Button asChild>
           <Link href="/dashboard/technician/add-service">
-           <div className="flex h-5 w-40 items-center gap-2">
-  <PlusCircle className="h-4 w-4 shrink-0" />
-  <span className="whitespace-nowrap">Add New Service</span>
-</div>
+            <PlusCircle className="h-4 w-4 mr-2" />
+            Add New Service
           </Link>
         </Button>
       </div>
 
-   
+      {/* Loading */}
       {loading && (
         <div className="flex justify-center items-center py-24">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
       )}
 
-  
+      {/* Empty State */}
       {!loading && services.length === 0 && (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-20 text-center">
@@ -112,7 +157,7 @@ const MyServicesPage = () => {
         </Card>
       )}
 
-      {/* Services Grid */}
+      {/* Services */}
       {!loading && services.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           {services.map((service) => (
@@ -120,7 +165,7 @@ const MyServicesPage = () => {
               key={service._id}
               className="overflow-hidden hover:shadow-lg transition-shadow duration-300"
             >
-              
+              {/* Image */}
               <div className="h-52 bg-muted overflow-hidden">
                 {service.image ? (
                   <img
@@ -135,6 +180,7 @@ const MyServicesPage = () => {
                 )}
               </div>
 
+              {/* Header */}
               <CardHeader className="pb-2">
                 <div className="flex items-start justify-between gap-3">
                   <h2 className="text-lg font-semibold leading-tight">
@@ -154,6 +200,7 @@ const MyServicesPage = () => {
                 </p>
               </CardHeader>
 
+              {/* Content */}
               <CardContent className="space-y-3">
                 <p className="text-xl font-bold text-primary">
                   ৳{service.price.toLocaleString("en-BD")}
@@ -162,6 +209,41 @@ const MyServicesPage = () => {
                 <p className="text-sm text-muted-foreground line-clamp-3">
                   {service.description}
                 </p>
+
+                {/* Edit & Delete Buttons */}
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    className="flex-1"
+                    asChild
+                  >
+                    <Link
+                      href={`/dashboard/technician/edit-service/${service._id}`}
+                    >
+                      <Pencil className="h-4 w-4 mr-2" />
+                      Edit
+                    </Link>
+                  </Button>
+
+                  <Button
+                    variant="destructive"
+                    className="flex-1"
+                    disabled={deletingId === service._id}
+                    onClick={() => handleDelete(service._id)}
+                  >
+                    {deletingId === service._id ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Deleting...
+                      </>
+                    ) : (
+                      <>
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Delete
+                      </>
+                    )}
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           ))}

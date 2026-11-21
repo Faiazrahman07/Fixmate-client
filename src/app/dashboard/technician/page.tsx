@@ -1,4 +1,9 @@
+"use client";
+
+import { useSession } from "@/lib/auth-client";
+import { useEffect, useState } from "react";
 import StatsCard from "@/components/Dashboard/StatsCard";
+
 import {
   Wrench,
   ClipboardList,
@@ -9,9 +14,36 @@ import {
 import Link from "next/link";
 
 const TechnicianDashboard = () => {
+  const { data: session } = useSession();
+
+const [totalServices, setTotalServices] = useState(0);
+
+useEffect(() => {
+  const fetchServices = async () => {
+    if (!session?.user?.email) return;
+
+    try {
+      const response = await fetch(
+        `http://localhost:5000/api/my-services/${session.user.email}`
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch services");
+      }
+
+      const data = await response.json();
+
+      setTotalServices(data.length);
+    } catch (error) {
+      console.error("Error fetching services:", error);
+    }
+  };
+
+  fetchServices();
+}, [session?.user?.email]);
   return (
     <div className="space-y-8">
-      {/* Header */}
+      
       <div>
         <h1 className="text-3xl font-bold">Technician Dashboard</h1>
         <p className="text-base-content/60 mt-2">
@@ -19,11 +51,11 @@ const TechnicianDashboard = () => {
         </p>
       </div>
 
-      {/* Statistics */}
+  
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
         <StatsCard
           title="My Services"
-          value={0}
+          value={totalServices}
           icon={Wrench}
           description="Total services listed"
         />
