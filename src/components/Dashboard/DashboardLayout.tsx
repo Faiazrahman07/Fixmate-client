@@ -10,15 +10,16 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <div className="min-h-screen bg-base-200">
+
       {/* Mobile Sidebar Toggle */}
       <button
         onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-        className="lg:hidden fixed top-4 left-4 z-50 btn btn-square btn-primary"
+        className="lg:hidden fixed top-4 left-4 z-[60] btn btn-square btn-primary"
       >
         {isSidebarOpen ? <X size={20} /> : <Menu size={20} />}
       </button>
 
-      {/* Overlay */}
+      {/* Mobile Overlay */}
       {isSidebarOpen && (
         <div
           onClick={() => setIsSidebarOpen(false)}
@@ -28,20 +29,24 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
 
       {/* Sidebar */}
       <div
-        className={`fixed top-0 left-0 z-50 h-screen transition-transform duration-300 lg:translate-x-0 ${
+        className={`fixed top-0 left-0 z-50 h-screen transition-transform duration-300 ${
           isSidebarOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
+        } lg:translate-x-0`}
       >
         <Sidebar />
       </div>
 
       {/* Main Content */}
       <div className="min-h-screen lg:ml-64">
+
+        {/* Dashboard Navbar */}
         <DashboardNavbar />
 
+        {/* Page Content */}
         <main className="p-4 md:p-6 lg:p-8">
           {children}
         </main>
+
       </div>
     </div>
   );

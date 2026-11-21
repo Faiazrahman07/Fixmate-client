@@ -124,7 +124,7 @@ const Navbar = () => {
                         </span>
                       </div>
 
-                      {/* Dropdown Links */}
+                
                       <div className="flex flex-col gap-1 pt-2">
                         <Link
                           href={dashboardRoute}
@@ -156,17 +156,17 @@ const Navbar = () => {
               ) : (
                 <>
                   <Link
-                    href="/sign-in"
+                    href="/signin"
                     className="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100"
                   >
-                    Sign In
+                    SignIn
                   </Link>
 
                   <Link
-                    href="/sign-up"
+                    href="/signup"
                     className="rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-blue-700"
                   >
-                    Sign Up
+                    SignUp
                   </Link>
                 </>
               )}
@@ -233,7 +233,7 @@ const Navbar = () => {
                       Dashboard
                     </Link>
 
-                    {/* Update Profile */}
+                  
                     <Link
                       href="/dashboard/profile"
                       onClick={() => setIsOpen(false)}
@@ -242,7 +242,7 @@ const Navbar = () => {
                       Update Profile
                     </Link>
 
-                    {/* Sign Out */}
+                    
                     <button
                       onClick={handleSignOut}
                       className="flex items-center gap-2 rounded-lg border px-4 py-2 text-sm text-red-600 transition hover:bg-red-50"
@@ -254,19 +254,19 @@ const Navbar = () => {
                 ) : (
                   <>
                     <Link
-                      href="/sign-in"
+                      href="/signin"
                       onClick={() => setIsOpen(false)}
                       className="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100"
                     >
                       Sign In
                     </Link>
 
-                    <Link
-                      href="/sign-up"
+                    <Link 
+                      href="/signup"
                       onClick={() => setIsOpen(false)}
                       className="rounded-lg bg-blue-600 px-5 py-2.5 text-center text-sm font-medium text-white transition hover:bg-blue-700"
                     >
-                      Get Started
+                      SignUp
                     </Link>
                   </>
                 )}
