@@ -204,12 +204,12 @@ const Navbar = () => {
               </Link>
             ))}
 
-            {/* Mobile Auth Section */}
+          
             {!isPending && (
               <div className="flex flex-col gap-3 border-t pt-4">
                 {session ? (
                   <>
-                    {/* User Information */}
+                    
                     <div className="flex items-center gap-3 rounded-lg bg-gray-50 p-3">
                       <UserCircle size={24} className="text-gray-700" />
 
@@ -224,7 +224,7 @@ const Navbar = () => {
                       </div>
                     </div>
 
-                    {/* Dashboard */}
+                    
                     <Link
                       href={dashboardRoute}
                       onClick={() => setIsOpen(false)}
