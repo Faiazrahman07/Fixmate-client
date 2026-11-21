@@ -45,14 +45,14 @@ const Navbar = () => {
   
         <div className="hidden items-center gap-3 md:flex">
           <Link
-            href="/Signin"
+            href="/signin"
             className="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100"
           >
             SignIn
           </Link>
 
           <Link
-            href="/Signup"
+            href="/signup"
             className="rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-blue-700"
           >
             SignUp
@@ -86,7 +86,7 @@ const Navbar = () => {
 
             <div className="flex gap-3 border-t pt-4">
               <Link
-                href="/login"
+                href="/signin"
                 onClick={() => setIsOpen(false)}
                 className="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
               >
@@ -94,7 +94,7 @@ const Navbar = () => {
               </Link>
 
               <Link
-                href="/register"
+                href="/signup"
                 onClick={() => setIsOpen(false)}
                 className="rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-700"
               >
