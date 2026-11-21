@@ -53,7 +53,7 @@ const Navbar = () => {
   return (
     <nav className="sticky top-0 z-50 border-b bg-white">
       <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-6">
-        {/* Logo */}
+
         <Link href="/" className="flex items-center gap-2">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-white">
             <Wrench size={22} />
@@ -64,7 +64,7 @@ const Navbar = () => {
           </span>
         </Link>
 
-        {/* Desktop Navigation */}
+  
         <div className="hidden items-center gap-8 md:flex">
           {navLinks.map((link) => (
             <Link
@@ -81,13 +81,13 @@ const Navbar = () => {
           ))}
         </div>
 
-        {/* Desktop Auth Section */}
+  
         <div className="hidden items-center gap-3 md:flex">
           {!isPending && (
             <>
               {session ? (
                 <div className="relative">
-                  {/* User Dropdown Button */}
+                  
                   <button
                     onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                     className="flex items-center gap-2 rounded-lg px-3 py-2 transition hover:bg-gray-100"
@@ -106,10 +106,9 @@ const Navbar = () => {
                     />
                   </button>
 
-                  {/* Dropdown Menu */}
                   {isDropdownOpen && (
                     <div className="absolute right-0 mt-2 w-64 rounded-xl border bg-white p-3 shadow-lg">
-                      {/* User Information */}
+                  
                       <div className="border-b pb-3">
                         <p className="font-semibold text-gray-900">
                           {session.user.name}
