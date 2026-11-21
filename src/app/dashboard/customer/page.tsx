@@ -37,7 +37,7 @@ const CustomerDashboard = () => {
         />
       </div>
 
-      {/* Recent Bookings */}
+     
       <div className="card bg-base-100 border border-base-300 shadow-sm">
         <div className="card-body">
 
