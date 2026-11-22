@@ -45,14 +45,12 @@ const Signin = () => {
 
     const newErrors: Record<string, string> = {};
 
-    // Email validation
     if (!values.email) {
       newErrors.email = "Email is required.";
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email)) {
       newErrors.email = "Please enter a valid email address.";
     }
 
-    // Password validation
     if (!values.password) {
       newErrors.password = "Password is required.";
     }

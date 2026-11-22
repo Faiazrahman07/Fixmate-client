@@ -50,7 +50,6 @@ const Signup = () => {
       return;
     }
 
-    // Password validation
     if (!values.password || !values.confirmPassword) {
       toast.error("Please enter your password");
       return;
@@ -110,7 +109,7 @@ const Signup = () => {
       <CardContent>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
 
-          {/* Name */}
+        
           <div className="flex flex-col gap-2">
             <Label htmlFor="name">Full name</Label>
 
@@ -129,7 +128,7 @@ const Signup = () => {
             </div>
           </div>
 
-          {/* Email */}
+      
           <div className="flex flex-col gap-2">
             <Label htmlFor="email">Email</Label>
 
