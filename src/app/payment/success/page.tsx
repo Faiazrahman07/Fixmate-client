@@ -1,16 +1,22 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 
-export default function PaymentSuccessPage() {
+interface Payment {
+  amount: number;
+  transactionId: string;
+  message: string;
+}
+
+function PaymentSuccessContent() {
   const searchParams = useSearchParams();
   const sessionId = searchParams.get("session_id");
 
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("Verifying your payment...");
-  const [payment, setPayment] = useState<any>(null);
+  const [payment, setPayment] = useState<Payment | null>(null);
 
   useEffect(() => {
     const verifyPayment = async () => {
@@ -26,7 +32,7 @@ export default function PaymentSuccessPage() {
         }
 
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/payments/verify?session_id=${sessionId}`,
+          `${process.env.NEXT_PUBLIC_API_URL}/api/payments/verify?session_id=${encodeURIComponent(sessionId)}`,
           {
             headers: {
               Authorization: `Bearer ${tokenData.token}`,
@@ -42,8 +48,12 @@ export default function PaymentSuccessPage() {
 
         setPayment(data);
         setMessage(data.message);
-      } catch (error: any) {
-        setMessage(error.message || "Something went wrong");
+      } catch (error: unknown) {
+        setMessage(
+          error instanceof Error
+            ? error.message
+            : "Something went wrong"
+        );
       } finally {
         setLoading(false);
       }
@@ -60,15 +70,18 @@ export default function PaymentSuccessPage() {
         ) : payment ? (
           <>
             <div className="text-5xl mb-4">✅</div>
+
             <h1 className="text-2xl font-bold text-green-600">
               Payment Successful!
             </h1>
+
             <p className="mt-3">{message}</p>
 
             <div className="mt-6 text-left space-y-2">
               <p>
                 <strong>Amount:</strong> ৳{payment.amount}
               </p>
+
               <p>
                 <strong>Transaction ID:</strong>{" "}
                 {payment.transactionId}
@@ -78,13 +91,31 @@ export default function PaymentSuccessPage() {
         ) : (
           <>
             <div className="text-4xl mb-4">❌</div>
+
             <h1 className="text-2xl font-bold text-red-600">
               Payment Verification Failed
             </h1>
+
             <p className="mt-3">{message}</p>
           </>
         )}
       </div>
     </div>
+  );
+}
+
+export default function PaymentSuccessPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <p className="text-xl font-semibold">
+            Loading payment details...
+          </p>
+        </div>
+      }
+    >
+      <PaymentSuccessContent />
+    </Suspense>
   );
 }

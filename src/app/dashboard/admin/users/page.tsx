@@ -187,9 +187,11 @@ export default function AdminUsersPage() {
                             <Select
                               value={user.role}
                               disabled={updatingId === user._id}
-                              onValueChange={(role) =>
-                                handleRoleChange(user._id, role)
-                              }
+                             onValueChange={(role) => {
+  if (role) {
+    handleRoleChange(user._id, role);
+  }
+}}
                             >
                               <SelectTrigger className="w-[130px]">
                                 {updatingId === user._id ? (

@@ -25,6 +25,7 @@ interface Booking {
   preferredDate: string;
   status: string;
   paymentStatus: string;
+  technicianEmail?: string;
 }
 
 const Page = () => {

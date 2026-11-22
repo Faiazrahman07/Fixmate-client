@@ -20,30 +20,35 @@ const Page = () => {
     }
   }, [user]);
 
- const handleUpdateProfile = async (e) => {
-  e.preventDefault();
+  const handleUpdateProfile = async (
+    e: React.FormEvent<HTMLFormElement>
+  ) => {
+    e.preventDefault();
 
-  setLoading(true);
-  setMessage("");
+    setLoading(true);
+    setMessage("");
 
-  try {
-    const { error } = await authClient.updateUser({
-      name: name,
-      image: image,
-    });
+    try {
+      const { error } = await authClient.updateUser({
+        name,
+        image,
+      });
 
-    if (error) {
-      throw new Error(error.message || "Profile update failed");
+      if (error) {
+        throw new Error(error.message || "Profile update failed");
+      }
+
+      setMessage("Profile updated successfully!");
+    } catch (error: unknown) {
+      setMessage(
+        error instanceof Error
+          ? error.message
+          : "Something went wrong"
+      );
+    } finally {
+      setLoading(false);
     }
-
-    setMessage("Profile updated successfully!");
-
-  } catch (error) {
-    setMessage(error.message);
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   if (isPending) {
     return <p>Loading...</p>;
@@ -58,7 +63,6 @@ const Page = () => {
       <h1 className="text-3xl font-bold mb-6">My Profile</h1>
 
       <form onSubmit={handleUpdateProfile} className="space-y-5">
-
         <div>
           <label className="block mb-2 font-medium">Email</label>
           <input
