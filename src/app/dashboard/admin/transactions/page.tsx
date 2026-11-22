@@ -1,22 +1,29 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { authClient } from "@/lib/auth-client";
 import { toast } from "sonner";
-import { CreditCard, DollarSign, Receipt } from "lucide-react";
+
+import {
+  CreditCard,
+  Receipt,
+  Banknote,
+  Loader2,
+  CalendarDays,
+} from "lucide-react";
 
 interface Payment {
   _id: string;
   bookingId: string;
   serviceTitle: string;
-  customerName: string;
   customerEmail: string;
-  technicianName: string;
-  technicianEmail: string;
+  customerName?: string;
   amount: number;
-  currency: string;
+  currency?: string;
   transactionId: string;
-  paymentStatus: string;
-  paidAt: string;
+  paymentStatus?: string;
+  paymentDate?: string;
+  paidAt?: string;
 }
 
 export default function AdminTransactionsPage() {
@@ -26,15 +33,32 @@ export default function AdminTransactionsPage() {
   useEffect(() => {
     const fetchPayments = async () => {
       try {
-        const res = await fetch("http://localhost:5000/api/admin/payments");
+      const tokenData = await authClient.token();
+
+const token = tokenData.data?.token;
+
+if (!token) {
+  throw new Error("Authentication token not found");
+}
+        const res = await fetch(
+          "http://localhost:5000/api/admin/payments",
+          {
+            headers: {
+            Authorization: `Bearer ${token}`,
+            },
+            cache: "no-store",
+          }
+        );
 
         if (!res.ok) {
           throw new Error("Failed to fetch payments");
         }
 
         const data = await res.json();
-        setPayments(data);
+
+        setPayments(Array.isArray(data) ? data : []);
       } catch (error) {
+        console.error("Admin Payments Error:", error);
         toast.error("Could not load transactions");
       } finally {
         setLoading(false);
@@ -44,53 +68,98 @@ export default function AdminTransactionsPage() {
     fetchPayments();
   }, []);
 
+ 
   const paidPayments = payments.filter(
-    (payment) => payment.paymentStatus === "paid"
+    (payment) =>
+      !payment.paymentStatus ||
+      payment.paymentStatus === "paid"
   );
 
+  
   const totalRevenue = paidPayments.reduce(
-    (total, payment) => total + Number(payment.amount || 0),
+    (total, payment) =>
+      total + Number(payment.amount || 0),
     0
   );
 
-  const formatAmount = (amount: number, currency = "usd") => {
+  
+  const formatAmount = (
+    amount: number,
+    currency = "bdt"
+  ) => {
+    if (currency.toLowerCase() === "bdt") {
+      return `৳${Number(amount).toLocaleString("en-BD", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })}`;
+    }
+
     return new Intl.NumberFormat("en-US", {
       style: "currency",
       currency: currency.toUpperCase(),
     }).format(amount);
   };
 
+  const formatDate = (date?: string) => {
+    if (!date) return "N/A";
+
+    return new Date(date).toLocaleDateString("en-BD", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  };
+
   return (
     <div className="space-y-6">
-      {/* Header */}
+
+     
       <div>
-        <h1 className="text-2xl font-bold">Transactions</h1>
+        <h1 className="text-2xl font-bold">
+          Transactions
+        </h1>
+
         <p className="text-sm text-gray-500 mt-1">
           Monitor all customer payments and platform revenue.
         </p>
       </div>
 
-      {/* Statistics */}
+      
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+
+        {/* Total Revenue */}
         <div className="bg-white rounded-xl border p-5 shadow-sm">
           <div className="flex items-center justify-between">
+
             <div>
-              <p className="text-sm text-gray-500">Total Revenue</p>
+              <p className="text-sm text-gray-500">
+                Total Revenue
+              </p>
+
               <h2 className="text-2xl font-bold mt-2">
-                {formatAmount(totalRevenue)}
+                {formatAmount(
+                  totalRevenue,
+                  paidPayments[0]?.currency || "bdt"
+                )}
               </h2>
             </div>
 
             <div className="bg-green-100 text-green-600 p-3 rounded-lg">
-              <DollarSign size={24} />
+              <Banknote size={24} />
             </div>
+
           </div>
         </div>
 
+        {/* Total Transactions */}
         <div className="bg-white rounded-xl border p-5 shadow-sm">
           <div className="flex items-center justify-between">
+
             <div>
-              <p className="text-sm text-gray-500">Total Transactions</p>
+              <p className="text-sm text-gray-500">
+                Total Transactions
+              </p>
+
               <h2 className="text-2xl font-bold mt-2">
                 {paidPayments.length}
               </h2>
@@ -99,32 +168,56 @@ export default function AdminTransactionsPage() {
             <div className="bg-blue-100 text-blue-600 p-3 rounded-lg">
               <Receipt size={24} />
             </div>
+
           </div>
         </div>
+
       </div>
 
-      {/* Transactions Table */}
+    
       <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
+
         <div className="p-5 border-b flex items-center gap-2">
           <CreditCard size={20} />
-          <h2 className="font-semibold">Payment History</h2>
+
+          <h2 className="font-semibold">
+            Payment History
+          </h2>
         </div>
 
         {loading ? (
-          <div className="p-10 text-center text-gray-500">
+
+          <div className="p-10 flex justify-center items-center gap-2 text-gray-500">
+            <Loader2 className="animate-spin" size={20} />
             Loading transactions...
           </div>
+
         ) : paidPayments.length === 0 ? (
+
           <div className="p-10 text-center text-gray-500">
-            No transactions found.
+            <Receipt
+              size={40}
+              className="mx-auto mb-3 text-gray-400"
+            />
+
+            <h3 className="font-semibold text-lg">
+              No Transactions Yet
+            </h3>
+
+            <p className="text-sm mt-1">
+              Customer payments will appear here.
+            </p>
           </div>
+
         ) : (
+
           <div className="overflow-x-auto">
+
             <table className="w-full text-sm text-left">
+
               <thead className="bg-gray-50 text-gray-600">
                 <tr>
                   <th className="p-4">Customer</th>
-                  <th className="p-4">Technician</th>
                   <th className="p-4">Service</th>
                   <th className="p-4">Amount</th>
                   <th className="p-4">Transaction ID</th>
@@ -134,36 +227,40 @@ export default function AdminTransactionsPage() {
               </thead>
 
               <tbody className="divide-y">
+
                 {paidPayments.map((payment) => (
-                  <tr key={payment._id} className="hover:bg-gray-50">
+
+                  <tr
+                    key={payment._id}
+                    className="hover:bg-gray-50 transition"
+                  >
+
+                
                     <td className="p-4">
                       <p className="font-medium">
-                        {payment.customerName || "N/A"}
+                        {payment.customerName || "Customer"}
                       </p>
+
                       <p className="text-xs text-gray-500">
                         {payment.customerEmail || "N/A"}
                       </p>
                     </td>
 
+                    {/* Service */}
                     <td className="p-4">
                       <p className="font-medium">
-                        {payment.technicianName || "N/A"}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {payment.technicianEmail || "N/A"}
+                        {payment.serviceTitle || "N/A"}
                       </p>
                     </td>
 
-                    <td className="p-4">
-                      {payment.serviceTitle || "N/A"}
-                    </td>
-
-                    <td className="p-4 font-semibold">
+         
+                    <td className="p-4 font-semibold text-green-600">
                       {formatAmount(
                         Number(payment.amount || 0),
-                        payment.currency || "usd"
+                        payment.currency || "bdt"
                       )}
                     </td>
+
 
                     <td className="p-4">
                       <span className="text-xs font-mono">
@@ -172,23 +269,39 @@ export default function AdminTransactionsPage() {
                     </td>
 
                     <td className="p-4 whitespace-nowrap">
-                      {payment.paidAt
-                        ? new Date(payment.paidAt).toLocaleDateString()
-                        : "N/A"}
+                      <div className="flex items-center gap-2">
+                        <CalendarDays
+                          size={15}
+                          className="text-gray-400"
+                        />
+
+                        {formatDate(
+                          payment.paymentDate || payment.paidAt
+                        )}
+                      </div>
                     </td>
 
+                    {/* Status */}
                     <td className="p-4">
                       <span className="px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
-                        {payment.paymentStatus}
+                        Paid
                       </span>
                     </td>
+
                   </tr>
+
                 ))}
+
               </tbody>
+
             </table>
+
           </div>
+
         )}
+
       </div>
+
     </div>
   );
 }
