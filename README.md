@@ -7,8 +7,8 @@ FixMate is a repair service booking platform where users can find technicians, b
 - Backend: https://fixmate-server-cyan.vercel.app
 
 ### Admin Login
-- Email: Your admin email
-- Password: Your admin password
+- Email: faiazrahman332@gmail.com
+- Password: Faiaz1234
 
 ### Features
 - Browse and book repair services
