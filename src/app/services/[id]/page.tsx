@@ -4,7 +4,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { Loader2, Wrench, CalendarDays } from "lucide-react";
-import { useSession } from "@/lib/auth-client";
+import { useSession, authClient } from "@/lib/auth-client";
 
 import {
   Dialog,
@@ -100,12 +100,18 @@ const ServiceDetailsPage = () => {
       setCheckingBooking(true);
 
       try {
-        const response = await fetch(
-          `http://localhost:5000/api/bookings/check/${id}/${encodeURIComponent(
-            session.user.email
-          )}`
-        );
+     const token = await authClient.token();
 
+const response = await fetch(
+  `http://localhost:5000/api/bookings/check/${id}/${encodeURIComponent(
+    session.user.email
+  )}`,
+  {
+    headers: {
+      Authorization: `Bearer ${token.data?.token}`,
+    },
+  }
+);
         if (!response.ok) {
           throw new Error("Failed to check booking");
         }
@@ -165,13 +171,16 @@ const ServiceDetailsPage = () => {
     };
 
     try {
-      const response = await fetch("http://localhost:5000/api/bookings", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(bookingData),
-      });
+    const token = await authClient.token();
+
+const response = await fetch("http://localhost:5000/api/bookings", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${token.data?.token}`,
+  },
+  body: JSON.stringify(bookingData),
+});
 
       const result = await response.json();
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useSession } from "@/lib/auth-client";
+import { useSession, authClient } from "@/lib/auth-client";
 import { Wrench, PlusCircle } from "lucide-react";
 
 const AddServicePage = () => {
@@ -41,6 +41,12 @@ const AddServicePage = () => {
     setLoading(true);
 
     try {
+      const token = await authClient.token();
+
+      if (!token?.data?.token) {
+        throw new Error("Authentication token not found. Please login again.");
+      }
+
       const serviceData = {
         ...formData,
         price: Number(formData.price),
@@ -53,12 +59,14 @@ const AddServicePage = () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token.data.token}`,
         },
         body: JSON.stringify(serviceData),
       });
 
       if (!response.ok) {
-        throw new Error("Failed to add service");
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to add service");
       }
 
       const result = await response.json();
@@ -76,7 +84,12 @@ const AddServicePage = () => {
       });
     } catch (error) {
       console.error("Error adding service:", error);
-      alert("Failed to add service. Please try again.");
+
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Failed to add service. Please try again."
+      );
     } finally {
       setLoading(false);
     }
@@ -84,7 +97,6 @@ const AddServicePage = () => {
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
-      {/* Header */}
       <div>
         <div className="flex items-center gap-3">
           <div className="p-3 rounded-xl bg-primary/10 text-primary">
@@ -100,11 +112,9 @@ const AddServicePage = () => {
         </div>
       </div>
 
-      {/* Form */}
       <div className="card bg-base-100 border border-base-300 shadow-sm">
         <div className="card-body">
           <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Service Title */}
             <div className="form-control">
               <label className="label">
                 <span className="label-text font-medium">Service Title</span>
@@ -121,7 +131,6 @@ const AddServicePage = () => {
               />
             </div>
 
-            {/* Category */}
             <div className="form-control">
               <label className="label">
                 <span className="label-text font-medium">Category</span>
@@ -145,10 +154,11 @@ const AddServicePage = () => {
               </select>
             </div>
 
-            {/* Price */}
             <div className="form-control">
               <label className="label">
-                <span className="label-text font-medium">Starting Price (৳)</span>
+                <span className="label-text font-medium">
+                  Starting Price (৳)
+                </span>
               </label>
 
               <input
@@ -163,10 +173,11 @@ const AddServicePage = () => {
               />
             </div>
 
-            {/* Image */}
             <div className="form-control">
               <label className="label">
-                <span className="label-text font-medium">Service Image URL</span>
+                <span className="label-text font-medium">
+                  Service Image URL
+                </span>
               </label>
 
               <input
@@ -179,7 +190,6 @@ const AddServicePage = () => {
               />
             </div>
 
-            {/* Description */}
             <div className="form-control">
               <label className="label">
                 <span className="label-text font-medium">Description</span>
@@ -195,7 +205,6 @@ const AddServicePage = () => {
               />
             </div>
 
-            {/* Submit */}
             <button
               type="submit"
               disabled={loading}

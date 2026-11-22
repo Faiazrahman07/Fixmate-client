@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useSession } from "@/lib/auth-client";
+import { useSession, authClient } from "@/lib/auth-client";
 
 interface Booking {
   _id: string;
@@ -20,33 +20,47 @@ interface Booking {
 
 export default function ManageRequestsPage() {
   const { data: session } = useSession();
+
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("all");
 
+  // Update Booking Status
   const handleStatusUpdate = async (
     id: string,
     status: string,
     finalAmount?: number
   ) => {
-    const updateData: { status: string; finalAmount?: number } = { status };
+    try {
+      const token = await authClient.token();
 
-    if (finalAmount !== undefined) {
-      updateData.finalAmount = finalAmount;
-    }
-
-    const res = await fetch(
-      `http://localhost:5000/api/bookings/${id}/status`,
-      {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(updateData),
+      if (!token?.data?.token) {
+        throw new Error("Authentication token not found. Please login again.");
       }
-    );
 
-    if (res.ok) {
+      const updateData: { status: string; finalAmount?: number } = { status };
+
+      if (finalAmount !== undefined) {
+        updateData.finalAmount = finalAmount;
+      }
+
+      const res = await fetch(
+        `http://localhost:5000/api/bookings/${id}/status`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token.data.token}`,
+          },
+          body: JSON.stringify(updateData),
+        }
+      );
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || "Failed to update booking status");
+      }
+
       setBookings((prev) =>
         prev.map((booking) =>
           booking._id === id
@@ -58,11 +72,20 @@ export default function ManageRequestsPage() {
             : booking
         )
       );
-    } else {
-      alert("Failed to update booking status!");
+
+      alert("Booking status updated successfully!");
+    } catch (error) {
+      console.error("Error updating booking:", error);
+
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Failed to update booking status!"
+      );
     }
   };
 
+  // Complete Booking
   const handleComplete = (booking: Booking) => {
     const amount = prompt(
       `Enter final amount (Base price: ${booking.basePrice}):`,
@@ -73,24 +96,58 @@ export default function ManageRequestsPage() {
 
     const finalAmount = Number(amount);
 
-    if (isNaN(finalAmount) || finalAmount < 0) {
-      alert("Please enter a valid amount!");
+    if (!Number.isFinite(finalAmount) || finalAmount <= 0) {
+      alert("Please enter an amount greater than 0!");
       return;
     }
 
     handleStatusUpdate(booking._id, "completed", finalAmount);
   };
 
+  // Fetch Technician Bookings
   useEffect(() => {
-    if (!session?.user?.email) return;
+    const fetchBookings = async () => {
+      if (!session?.user?.email) {
+        setLoading(false);
+        return;
+      }
 
-    fetch(
-      `http://localhost:5000/api/bookings/technician/${session.user.email}`
-    )
-      .then((res) => res.json())
-      .then((data) => setBookings(data))
-      .finally(() => setLoading(false));
-  }, [session]);
+      try {
+        const token = await authClient.token();
+
+        if (!token?.data?.token) {
+          throw new Error("Authentication token not found. Please login again.");
+        }
+
+        const response = await fetch(
+          `http://localhost:5000/api/bookings/technician/${encodeURIComponent(session.user.email)}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token.data.token}`,
+            },
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch booking requests");
+        }
+
+        const data = await response.json();
+        setBookings(data);
+      } catch (error) {
+        console.error("Error fetching bookings:", error);
+        alert(
+          error instanceof Error
+            ? error.message
+            : "Failed to load booking requests"
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBookings();
+  }, [session?.user?.email]);
 
   const filteredBookings = bookings.filter((booking) =>
     filter === "all" ? true : booking.status === filter
@@ -136,7 +193,9 @@ export default function ManageRequestsPage() {
               key={booking._id}
               className="border rounded-xl p-5 space-y-2"
             >
-              <h2 className="text-xl font-semibold">{booking.serviceTitle}</h2>
+              <h2 className="text-xl font-semibold">
+                {booking.serviceTitle}
+              </h2>
 
               <p>
                 <strong>Customer:</strong> {booking.customerName}

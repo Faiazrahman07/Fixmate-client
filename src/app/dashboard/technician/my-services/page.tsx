@@ -1,6 +1,6 @@
 "use client";
 
-import { useSession } from "@/lib/auth-client";
+import { useSession, authClient } from "@/lib/auth-client";
 import { useEffect, useState } from "react";
 import {
   Wrench,
@@ -41,8 +41,19 @@ const MyServicesPage = () => {
       }
 
       try {
+        const token = await authClient.token();
+
+        if (!token?.data?.token) {
+          throw new Error("Authentication token not found. Please login again.");
+        }
+
         const response = await fetch(
-          `http://localhost:5000/api/my-services/${session.user.email}`
+          `http://localhost:5000/api/my-services/${encodeURIComponent(session.user.email)}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token.data.token}`,
+            },
+          }
         );
 
         if (!response.ok) {
@@ -84,10 +95,19 @@ const MyServicesPage = () => {
     setDeletingId(id);
 
     try {
+      const token = await authClient.token();
+
+      if (!token?.data?.token) {
+        throw new Error("Authentication token not found. Please login again.");
+      }
+
       const response = await fetch(
         `http://localhost:5000/api/services/${id}`,
         {
           method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token.data.token}`,
+          },
         }
       );
 
@@ -95,7 +115,6 @@ const MyServicesPage = () => {
         throw new Error("Failed to delete service");
       }
 
-      // Remove deleted service from UI
       setServices((prevServices) =>
         prevServices.filter((service) => service._id !== id)
       );
@@ -103,7 +122,12 @@ const MyServicesPage = () => {
       alert("Service deleted successfully!");
     } catch (error) {
       console.error("Error deleting service:", error);
-      alert("Failed to delete service. Please try again.");
+
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Failed to delete service. Please try again."
+      );
     } finally {
       setDeletingId(null);
     }
@@ -212,11 +236,7 @@ const MyServicesPage = () => {
 
                 {/* Edit & Delete Buttons */}
                 <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    className="flex-1"
-                    asChild
-                  >
+                  <Button variant="outline" className="flex-1" asChild>
                     <Link
                       href={`/dashboard/technician/edit-service/${service._id}`}
                     >

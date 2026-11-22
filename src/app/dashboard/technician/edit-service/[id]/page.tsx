@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { authClient } from "@/lib/auth-client";
 import { Loader2, Wrench, Save } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -71,6 +72,12 @@ const EditServicePage = () => {
     setSaving(true);
 
     try {
+      const token = await authClient.token();
+
+      if (!token?.data?.token) {
+        throw new Error("Authentication token not found. Please login again.");
+      }
+
       const updatedData = {
         title: service.title,
         category: service.category,
@@ -85,6 +92,7 @@ const EditServicePage = () => {
           method: "PATCH",
           headers: {
             "Content-Type": "application/json",
+            Authorization: `Bearer ${token.data.token}`,
           },
           body: JSON.stringify(updatedData),
         }
@@ -95,11 +103,17 @@ const EditServicePage = () => {
       }
 
       alert("Service updated successfully!");
+
       router.push("/dashboard/technician/my-services");
       router.refresh();
     } catch (error) {
       console.error("Error updating service:", error);
-      alert("Failed to update service. Please try again.");
+
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Failed to update service. Please try again."
+      );
     } finally {
       setSaving(false);
     }

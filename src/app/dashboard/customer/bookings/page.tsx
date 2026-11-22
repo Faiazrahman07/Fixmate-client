@@ -1,9 +1,16 @@
+
 "use client";
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import { CalendarDays, Loader2, Wrench, XCircle } from "lucide-react";
-import { useSession } from "@/lib/auth-client";
+import {
+  CalendarDays,
+  Loader2,
+  Wrench,
+  XCircle,
+  CreditCard,
+} from "lucide-react";
+import { useSession, authClient } from "@/lib/auth-client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
@@ -26,7 +33,9 @@ const Page = () => {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [cancelLoading, setCancelLoading] = useState("");
+  const [paymentLoading, setPaymentLoading] = useState("");
 
+  // Fetch Customer Bookings
   useEffect(() => {
     const fetchBookings = async () => {
       if (isPending) return;
@@ -37,11 +46,24 @@ const Page = () => {
       }
 
       try {
+        const { data: tokenData, error } = await authClient.token();
+
+        if (error || !tokenData?.token) {
+          throw new Error("JWT token not found");
+        }
+
         const response = await fetch(
-          `http://localhost:5000/api/bookings/my/${encodeURIComponent(
-            session.user.email
-          )}`
+          "http://localhost:5000/api/bookings/my",
+          {
+            headers: {
+              Authorization: `Bearer ${tokenData.token}`,
+            },
+          }
         );
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch bookings");
+        }
 
         const data = await response.json();
         setBookings(data);
@@ -55,6 +77,7 @@ const Page = () => {
     fetchBookings();
   }, [session, isPending]);
 
+  // Cancel Booking
   const handleCancel = async (id: string) => {
     const confirmCancel = window.confirm(
       "Are you sure you want to cancel this booking?"
@@ -65,10 +88,19 @@ const Page = () => {
     setCancelLoading(id);
 
     try {
+      const { data: tokenData, error } = await authClient.token();
+
+      if (error || !tokenData?.token) {
+        throw new Error("JWT token not found");
+      }
+
       const response = await fetch(
         `http://localhost:5000/api/bookings/${id}/cancel`,
         {
           method: "PATCH",
+          headers: {
+            Authorization: `Bearer ${tokenData.token}`,
+          },
         }
       );
 
@@ -78,7 +110,7 @@ const Page = () => {
 
       const result = await response.json();
 
-      if (result.modifiedCount > 0) {
+      if (result.result?.modifiedCount > 0) {
         setBookings((previousBookings) =>
           previousBookings.map((booking) =>
             booking._id === id
@@ -96,6 +128,53 @@ const Page = () => {
       alert("Failed to cancel booking. Please try again.");
     } finally {
       setCancelLoading("");
+    }
+  };
+
+  // Stripe Checkout
+  const handlePayment = async (bookingId: string) => {
+    setPaymentLoading(bookingId);
+
+    try {
+      const { data: tokenData, error } = await authClient.token();
+
+      if (error || !tokenData?.token) {
+        throw new Error("JWT token not found");
+      }
+
+      const response = await fetch(
+        "http://localhost:5000/api/payments/create-checkout-session",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${tokenData.token}`,
+          },
+          body: JSON.stringify({ bookingId }),
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || "Failed to create checkout session");
+      }
+
+      if (!result.url) {
+        throw new Error("Stripe checkout URL not found");
+      }
+
+      // Redirect to Stripe Checkout
+      window.location.href = result.url;
+    } catch (error) {
+      console.error("Payment Error:", error);
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Unable to start payment. Please try again."
+      );
+    } finally {
+      setPaymentLoading("");
     }
   };
 
@@ -148,11 +227,13 @@ const Page = () => {
                     <h2 className="font-semibold text-lg">
                       {booking.serviceTitle}
                     </h2>
+
                     <p className="text-sm text-muted-foreground">
                       {booking.category}
                     </p>
+
                     <p className="text-sm mt-2">
-                      Technician: {booking.technicianName}
+                      Technician: {booking.technicianName || booking.technicianEmail}
                     </p>
                   </div>
                 </div>
@@ -169,7 +250,7 @@ const Page = () => {
                   <div>
                     <p className="text-muted-foreground">Amount</p>
                     <p className="font-semibold mt-1">
-                      $
+                      ৳
                       {booking.status === "completed"
                         ? booking.finalAmount
                         : booking.basePrice}
@@ -216,19 +297,42 @@ const Page = () => {
                       ) : (
                         <XCircle className="h-4 w-4 mr-2" />
                       )}
+
                       {cancelLoading === booking._id
                         ? "Cancelling..."
                         : "Cancel Booking"}
                     </Button>
                   </div>
                 )}
+
+            
+                {booking.status === "completed" &&
+                  booking.paymentStatus !== "paid" && (
+                    <div className="mt-4 pt-4 border-t">
+                      <Button
+                        className="w-full bg-blue-600 hover:bg-blue-700"
+                        disabled={paymentLoading === booking._id}
+                        onClick={() => handlePayment(booking._id)}
+                      >
+                        {paymentLoading === booking._id ? (
+                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                        ) : (
+                          <CreditCard className="h-4 w-4 mr-2" />
+                        )}
+
+                        {paymentLoading === booking._id
+                          ? "Redirecting to Payment..."
+                          : "Pay Now"}
+                      </Button>
+                    </div>
+                  )}
               </CardContent>
             </Card>
           ))}
         </div>
       )}
     </div>
-  );
+);
 };
 
 export default Page;

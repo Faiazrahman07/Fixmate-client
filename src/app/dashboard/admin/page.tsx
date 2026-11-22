@@ -3,22 +3,54 @@
 import { useEffect, useState } from "react";
 import { Users, Wrench, ClipboardList } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { authClient } from "@/lib/auth-client";
 
 export default function AdminDashboard() {
   const [totalUsers, setTotalUsers] = useState(0);
   const [totalTechnicians, setTotalTechnicians] = useState(0);
   const [pendingServices, setPendingServices] = useState(0);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
+        const { data: tokenData, error } = await authClient.token();
+
+        if (error || !tokenData?.token) {
+          throw new Error("Authentication token not found");
+        }
+
+        const headers = {
+          Authorization: `Bearer ${tokenData.token}`,
+        };
+
         const [usersRes, servicesRes] = await Promise.all([
-          fetch("http://localhost:5000/api/admin/users"),
-          fetch("http://localhost:5000/api/services"),
+          fetch("http://localhost:5000/api/admin/users", { headers }),
+          fetch("http://localhost:5000/api/services", { headers }),
         ]);
 
-        const users = await usersRes.json();
-        const services = await servicesRes.json();
+        if (!usersRes.ok) {
+          throw new Error("Failed to load users");
+        }
+
+        if (!servicesRes.ok) {
+          throw new Error("Failed to load services");
+        }
+
+        const usersData = await usersRes.json();
+        const servicesData = await servicesRes.json();
+
+        const users = Array.isArray(usersData)
+          ? usersData
+          : usersData.users;
+
+        const services = Array.isArray(servicesData)
+          ? servicesData
+          : servicesData.services;
+
+        if (!Array.isArray(users) || !Array.isArray(services)) {
+          throw new Error("Invalid API response format");
+        }
 
         setTotalUsers(users.length);
 
@@ -27,10 +59,14 @@ export default function AdminDashboard() {
         );
 
         setPendingServices(
-          services.filter((service: any) => service.status === "pending").length
+          services.filter(
+            (service: any) => service.status === "pending"
+          ).length
         );
       } catch (error) {
         console.error("Failed to fetch admin dashboard data:", error);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -81,7 +117,10 @@ export default function AdminDashboard() {
               </CardHeader>
 
               <CardContent>
-                <div className="text-3xl font-bold">{stat.value}</div>
+                <div className="text-3xl font-bold">
+                  {loading ? "..." : stat.value}
+                </div>
+
                 <p className="text-xs text-muted-foreground mt-1">
                   {stat.description}
                 </p>
