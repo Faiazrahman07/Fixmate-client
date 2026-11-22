@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
+import { authClient } from "@/lib/auth-client";
 import API_URL from "@/lib/api";
 
 interface Booking {
@@ -18,6 +20,38 @@ interface Booking {
   finalAmount?: number;
 }
 
+const isBooking = (value: unknown): value is Booking => {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  const candidate = value as Partial<Booking>;
+
+  return typeof candidate._id === "string" && candidate._id.length > 0;
+};
+
+const getErrorMessage = async (res: Response, fallback: string) => {
+  if (res.status === 401) {
+    return "Your session has expired. Please sign in again.";
+  }
+
+  if (res.status === 403) {
+    return "You do not have permission to view bookings.";
+  }
+
+  try {
+    const data = await res.json();
+
+    if (data && typeof data.message === "string") {
+      return data.message;
+    }
+  } catch {
+    // Ignore non-JSON error responses.
+  }
+
+  return fallback;
+};
+
 export default function AdminBookingsPage() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
@@ -26,11 +60,44 @@ export default function AdminBookingsPage() {
   useEffect(() => {
     const fetchBookings = async () => {
       try {
-        const res = await fetch(`${API_URL}/api/admin/bookings`);
+        const { data: tokenData, error } = await authClient.token();
+
+        if (error || !tokenData?.token) {
+          throw new Error(
+            "Authentication token not found. Please sign in again."
+          );
+        }
+
+        const res = await fetch(`${API_URL}/api/admin/bookings`, {
+          headers: {
+            Authorization: `Bearer ${tokenData.token}`,
+          },
+          cache: "no-store",
+        });
+
+        if (!res.ok) {
+          throw new Error(await getErrorMessage(res, "Failed to load bookings"));
+        }
+
         const data = await res.json();
-        setBookings(data);
+
+        const list = Array.isArray(data)
+          ? data
+          : Array.isArray(data?.bookings)
+            ? data.bookings
+            : null;
+
+        if (!list) {
+          throw new Error("Unexpected response from the server.");
+        }
+
+        setBookings(list.filter(isBooking));
       } catch (error) {
-        console.error(error);
+        console.error("Fetch Bookings Error:", error);
+
+        toast.error(
+          error instanceof Error ? error.message : "Failed to load bookings"
+        );
       } finally {
         setLoading(false);
       }

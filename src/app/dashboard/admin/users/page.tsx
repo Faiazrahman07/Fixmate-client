@@ -26,7 +26,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-import { useSession } from "@/lib/auth-client";
+import { authClient, useSession } from "@/lib/auth-client";
 import API_URL from "@/lib/api";
 
 interface User {
@@ -38,6 +38,38 @@ interface User {
   createdAt?: string;
 }
 
+const isUser = (value: unknown): value is User => {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  const candidate = value as Partial<User>;
+
+  return typeof candidate._id === "string" && candidate._id.length > 0;
+};
+
+const getErrorMessage = async (res: Response, fallback: string) => {
+  if (res.status === 401) {
+    return "Your session has expired. Please sign in again.";
+  }
+
+  if (res.status === 403) {
+    return "You do not have permission to manage users.";
+  }
+
+  try {
+    const data = await res.json();
+
+    if (data && typeof data.message === "string") {
+      return data.message;
+    }
+  } catch {
+    // Ignore non-JSON error responses.
+  }
+
+  return fallback;
+};
+
 export default function AdminUsersPage() {
   const { data: session } = useSession();
 
@@ -46,39 +78,80 @@ export default function AdminUsersPage() {
   const [updatingId, setUpdatingId] = useState<string | null>(null);
 
   useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const { data: tokenData, error } = await authClient.token();
+
+        if (error || !tokenData?.token) {
+          throw new Error(
+            "Authentication token not found. Please sign in again."
+          );
+        }
+
+        const res = await fetch(`${API_URL}/api/admin/users`, {
+          headers: {
+            Authorization: `Bearer ${tokenData.token}`,
+          },
+          cache: "no-store",
+        });
+
+        if (!res.ok) {
+          throw new Error(await getErrorMessage(res, "Failed to load users"));
+        }
+
+        const data = await res.json();
+
+        const list = Array.isArray(data)
+          ? data
+          : Array.isArray(data?.users)
+            ? data.users
+            : null;
+
+        if (!list) {
+          throw new Error("Unexpected response from the server.");
+        }
+
+        setUsers(list.filter(isUser));
+      } catch (error) {
+        console.error("Fetch Users Error:", error);
+
+        toast.error(
+          error instanceof Error ? error.message : "Failed to load users"
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchUsers();
   }, []);
-
-  const fetchUsers = async () => {
-    try {
-      const res = await fetch(`${API_URL}/api/admin/users`);
-      const data = await res.json();
-
-      setUsers(data);
-    } catch (error) {
-      toast.error("Failed to load users");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleRoleChange = async (userId: string, role: string) => {
     setUpdatingId(userId);
 
     try {
+      const { data: tokenData, error } = await authClient.token();
+
+      if (error || !tokenData?.token) {
+        throw new Error("Authentication token not found. Please sign in again.");
+      }
+
       const res = await fetch(
         `${API_URL}/api/admin/users/${userId}/role`,
         {
           method: "PATCH",
           headers: {
             "Content-Type": "application/json",
+            Authorization: `Bearer ${tokenData.token}`,
           },
           body: JSON.stringify({ role }),
         }
       );
 
       if (!res.ok) {
-        throw new Error("Role update failed");
+        throw new Error(
+          await getErrorMessage(res, "Failed to update user role")
+        );
       }
 
       setUsers((prev) =>
@@ -89,7 +162,11 @@ export default function AdminUsersPage() {
 
       toast.success("User role updated successfully");
     } catch (error) {
-      toast.error("Failed to update user role");
+      console.error("Update User Role Error:", error);
+
+      toast.error(
+        error instanceof Error ? error.message : "Failed to update user role"
+      );
     } finally {
       setUpdatingId(null);
     }
