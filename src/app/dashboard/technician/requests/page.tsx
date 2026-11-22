@@ -14,6 +14,8 @@ interface Booking {
   problemDescription: string;
   status: string;
   basePrice: number;
+  finalAmount?: number;
+  paymentStatus?: string;
 }
 
 export default function ManageRequestsPage() {
@@ -21,6 +23,63 @@ export default function ManageRequestsPage() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("all");
+
+  const handleStatusUpdate = async (
+    id: string,
+    status: string,
+    finalAmount?: number
+  ) => {
+    const updateData: { status: string; finalAmount?: number } = { status };
+
+    if (finalAmount !== undefined) {
+      updateData.finalAmount = finalAmount;
+    }
+
+    const res = await fetch(
+      `http://localhost:5000/api/bookings/${id}/status`,
+      {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(updateData),
+      }
+    );
+
+    if (res.ok) {
+      setBookings((prev) =>
+        prev.map((booking) =>
+          booking._id === id
+            ? {
+                ...booking,
+                status,
+                ...(finalAmount !== undefined && { finalAmount }),
+              }
+            : booking
+        )
+      );
+    } else {
+      alert("Failed to update booking status!");
+    }
+  };
+
+  const handleComplete = (booking: Booking) => {
+    const amount = prompt(
+      `Enter final amount (Base price: ${booking.basePrice}):`,
+      String(booking.basePrice)
+    );
+
+    if (amount === null || amount.trim() === "") return;
+
+    const finalAmount = Number(amount);
+
+    if (isNaN(finalAmount) || finalAmount < 0) {
+      alert("Please enter a valid amount!");
+      return;
+    }
+
+    handleStatusUpdate(booking._id, "completed", finalAmount);
+  };
 
   useEffect(() => {
     if (!session?.user?.email) return;
@@ -73,7 +132,10 @@ export default function ManageRequestsPage() {
       ) : (
         <div className="space-y-4">
           {filteredBookings.map((booking) => (
-            <div key={booking._id} className="border rounded-xl p-5 space-y-2">
+            <div
+              key={booking._id}
+              className="border rounded-xl p-5 space-y-2"
+            >
               <h2 className="text-xl font-semibold">{booking.serviceTitle}</h2>
 
               <p>
@@ -98,13 +160,61 @@ export default function ManageRequestsPage() {
               </p>
 
               <p>
-                <strong>Price:</strong> ৳{booking.basePrice}
+                <strong>Base Price:</strong> ৳{booking.basePrice}
               </p>
+
+              {booking.status === "completed" && (
+                <p>
+                  <strong>Final Amount:</strong> ৳{booking.finalAmount}
+                </p>
+              )}
 
               <p>
                 <strong>Status:</strong>{" "}
                 <span className="capitalize">{booking.status}</span>
               </p>
+
+              {booking.status === "requested" && (
+                <div className="flex gap-3 pt-3">
+                  <button
+                    onClick={() =>
+                      handleStatusUpdate(booking._id, "accepted")
+                    }
+                    className="bg-green-600 text-white px-4 py-2 rounded-lg"
+                  >
+                    Accept
+                  </button>
+
+                  <button
+                    onClick={() =>
+                      handleStatusUpdate(booking._id, "rejected")
+                    }
+                    className="bg-red-600 text-white px-4 py-2 rounded-lg"
+                  >
+                    Reject
+                  </button>
+                </div>
+              )}
+
+              {booking.status === "accepted" && (
+                <button
+                  onClick={() =>
+                    handleStatusUpdate(booking._id, "in-progress")
+                  }
+                  className="bg-blue-600 text-white px-4 py-2 rounded-lg mt-3"
+                >
+                  Start Work
+                </button>
+              )}
+
+              {booking.status === "in-progress" && (
+                <button
+                  onClick={() => handleComplete(booking)}
+                  className="bg-purple-600 text-white px-4 py-2 rounded-lg mt-3"
+                >
+                  Mark Completed
+                </button>
+              )}
             </div>
           ))}
         </div>
