@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/select";
 
 import { useSession } from "@/lib/auth-client";
+import API_URL from "@/lib/api";
 
 interface User {
   _id: string;
@@ -50,7 +51,7 @@ export default function AdminUsersPage() {
 
   const fetchUsers = async () => {
     try {
-      const res = await fetch("http://localhost:5000/api/admin/users");
+      const res = await fetch(`${API_URL}/api/admin/users`);
       const data = await res.json();
 
       setUsers(data);
@@ -66,7 +67,7 @@ export default function AdminUsersPage() {
 
     try {
       const res = await fetch(
-        `http://localhost:5000/api/admin/users/${userId}/role`,
+        `${API_URL}/api/admin/users/${userId}/role`,
         {
           method: "PATCH",
           headers: {

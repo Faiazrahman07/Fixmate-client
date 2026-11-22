@@ -11,6 +11,7 @@ import {
   CreditCard,
 } from "lucide-react";
 import { useSession, authClient } from "@/lib/auth-client";
+import API_URL from "@/lib/api";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
@@ -54,7 +55,7 @@ const Page = () => {
         }
 
         const response = await fetch(
-          "http://localhost:5000/api/bookings/my",
+          `${API_URL}/api/bookings/my`,
           {
             headers: {
               Authorization: `Bearer ${tokenData.token}`,
@@ -96,7 +97,7 @@ const Page = () => {
       }
 
       const response = await fetch(
-        `http://localhost:5000/api/bookings/${id}/cancel`,
+        `${API_URL}/api/bookings/${id}/cancel`,
         {
           method: "PATCH",
           headers: {
@@ -144,7 +145,7 @@ const Page = () => {
       }
 
       const response = await fetch(
-        "http://localhost:5000/api/payments/create-checkout-session",
+        `${API_URL}/api/payments/create-checkout-session`,
         {
           method: "POST",
           headers: {

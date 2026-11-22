@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { Users, Wrench, ClipboardList } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { authClient } from "@/lib/auth-client";
+import API_URL from "@/lib/api";
+
 
 export default function AdminDashboard() {
   const [totalUsers, setTotalUsers] = useState(0);
@@ -25,8 +27,8 @@ export default function AdminDashboard() {
         };
 
         const [usersRes, servicesRes] = await Promise.all([
-          fetch("http://localhost:5000/api/admin/users", { headers }),
-          fetch("http://localhost:5000/api/services", { headers }),
+          fetch(`${API_URL}/api/admin/users`, { headers }),
+          fetch(`${API_URL}/api/services`, { headers }),
         ]);
 
         if (!usersRes.ok) {

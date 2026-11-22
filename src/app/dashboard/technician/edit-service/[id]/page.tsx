@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
+import API_URL from "@/lib/api";
 import { Loader2, Wrench, Save } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -35,7 +36,7 @@ const EditServicePage = () => {
     const fetchService = async () => {
       try {
         const response = await fetch(
-          `http://localhost:5000/api/services/${id}`
+          `${API_URL}/api/services/${id}`
         );
 
         if (!response.ok) {
@@ -87,7 +88,7 @@ const EditServicePage = () => {
       };
 
       const response = await fetch(
-        `http://localhost:5000/api/services/${id}`,
+        `${API_URL}/api/services/${id}`,
         {
           method: "PATCH",
           headers: {

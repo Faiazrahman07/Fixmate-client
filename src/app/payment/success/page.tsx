@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
+import API_URL from "@/lib/api";
 
 interface Payment {
   amount: number;
@@ -32,7 +33,7 @@ function PaymentSuccessContent() {
         }
 
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/payments/verify?session_id=${encodeURIComponent(sessionId)}`,
+          `${API_URL}/api/payments/verify?session_id=${encodeURIComponent(sessionId)}`,
           {
             headers: {
               Authorization: `Bearer ${tokenData.token}`,

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Loader2, ArrowRight, Search } from "lucide-react";
+import API_URL from "@/lib/api";
 
 interface Service {
   _id: string;
@@ -78,7 +79,7 @@ export default function ServicesContent() {
         }
 
         const response = await fetch(
-          `http://localhost:5000/api/services?${params.toString()}`
+          `${API_URL}/api/services?${params.toString()}`
         );
 
         if (!response.ok) {

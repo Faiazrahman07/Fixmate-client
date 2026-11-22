@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
+import API_URL from "@/lib/api";
 
 interface Booking {
   _id: string;
@@ -25,7 +26,7 @@ export default function AdminBookingsPage() {
   useEffect(() => {
     const fetchBookings = async () => {
       try {
-        const res = await fetch("http://localhost:5000/api/admin/bookings");
+        const res = await fetch(`${API_URL}/api/admin/bookings`);
         const data = await res.json();
         setBookings(data);
       } catch (error) {

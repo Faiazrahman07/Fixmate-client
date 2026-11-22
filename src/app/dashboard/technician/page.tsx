@@ -1,6 +1,7 @@
 "use client";
 
 import { useSession } from "@/lib/auth-client";
+import API_URL from "@/lib/api";
 import { useEffect, useState } from "react";
 import StatsCard from "@/components/Dashboard/StatsCard";
 
@@ -24,7 +25,7 @@ useEffect(() => {
 
     try {
       const response = await fetch(
-        `http://localhost:5000/api/my-services/${session.user.email}`
+        `${API_URL}/api/my-services/${session.user.email}`
       );
 
       if (!response.ok) {

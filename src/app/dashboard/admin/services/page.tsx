@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Check, X, Loader2 } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
+import API_URL from "@/lib/api";
 
 interface Service {
   _id: string;
@@ -31,7 +32,7 @@ export default function AdminServicesPage() {
       }
 
       const res = await fetch(
-        "http://localhost:5000/api/admin/services",
+        `${API_URL}/api/admin/services`,
         {
           headers: {
             Authorization: `Bearer ${tokenData.token}`,
@@ -75,7 +76,7 @@ export default function AdminServicesPage() {
       }
 
       const res = await fetch(
-        `http://localhost:5000/api/admin/services/${id}/approval`,
+        `${API_URL}/api/admin/services/${id}/approval`,
         {
           method: "PATCH",
           headers: {

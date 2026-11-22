@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useSession, authClient } from "@/lib/auth-client";
+import API_URL from "@/lib/api";
 import { Wrench, PlusCircle } from "lucide-react";
 
 const AddServicePage = () => {
@@ -55,7 +56,7 @@ const AddServicePage = () => {
         available: true,
       };
 
-      const response = await fetch("http://localhost:5000/api/services", {
+      const response = await fetch(`${API_URL}/api/services`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

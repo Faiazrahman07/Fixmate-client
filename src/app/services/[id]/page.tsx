@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { Loader2, Wrench, CalendarDays } from "lucide-react";
 import { useSession, authClient } from "@/lib/auth-client";
+import API_URL from "@/lib/api";
 
 import {
   Dialog,
@@ -56,7 +57,7 @@ const ServiceDetailsPage = () => {
     const fetchService = async () => {
       try {
         const response = await fetch(
-          `http://localhost:5000/api/services/${id}`
+          `${API_URL}/api/services/${id}`
         );
 
         if (!response.ok) {
@@ -103,7 +104,7 @@ const ServiceDetailsPage = () => {
      const token = await authClient.token();
 
 const response = await fetch(
-  `http://localhost:5000/api/bookings/check/${id}/${encodeURIComponent(
+  `${API_URL}/api/bookings/check/${id}/${encodeURIComponent(
     session.user.email
   )}`,
   {
@@ -173,7 +174,7 @@ const response = await fetch(
     try {
     const token = await authClient.token();
 
-const response = await fetch("http://localhost:5000/api/bookings", {
+const response = await fetch(`${API_URL}/api/bookings`, {
   method: "POST",
   headers: {
     "Content-Type": "application/json",

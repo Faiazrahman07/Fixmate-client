@@ -1,6 +1,7 @@
 "use client";
 
 import { useSession, authClient } from "@/lib/auth-client";
+import API_URL from "@/lib/api";
 import { useEffect, useState } from "react";
 import {
   Wrench,
@@ -48,7 +49,7 @@ const MyServicesPage = () => {
         }
 
         const response = await fetch(
-          `http://localhost:5000/api/my-services/${encodeURIComponent(session.user.email)}`,
+          `${API_URL}/api/my-services/${encodeURIComponent(session.user.email)}`,
           {
             headers: {
               Authorization: `Bearer ${token.data.token}`,
@@ -100,7 +101,7 @@ const MyServicesPage = () => {
       }
 
       const response = await fetch(
-        `http://localhost:5000/api/services/${id}`,
+        `${API_URL}/api/services/${id}`,
         {
           method: "DELETE",
           headers: {

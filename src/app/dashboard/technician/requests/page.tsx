@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useSession, authClient } from "@/lib/auth-client";
+import API_URL from "@/lib/api";
 
 interface Booking {
   _id: string;
@@ -45,7 +46,7 @@ export default function ManageRequestsPage() {
       }
 
       const res = await fetch(
-        `http://localhost:5000/api/bookings/${id}/status`,
+        `${API_URL}/api/bookings/${id}/status`,
         {
           method: "PATCH",
           headers: {
@@ -120,7 +121,7 @@ export default function ManageRequestsPage() {
         }
 
         const response = await fetch(
-          `http://localhost:5000/api/bookings/technician/${encodeURIComponent(session.user.email)}`,
+          `${API_URL}/api/bookings/technician/${encodeURIComponent(session.user.email)}`,
           {
             headers: {
               Authorization: `Bearer ${token.data.token}`,

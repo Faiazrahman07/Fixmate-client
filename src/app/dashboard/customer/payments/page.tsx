@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { authClient } from "@/lib/auth-client";
+import API_URL from "@/lib/api";
 import { CreditCard, CalendarDays, Receipt, Loader2 } from "lucide-react";
 
 interface Payment {
@@ -28,7 +29,7 @@ export default function CustomerPaymentsPage() {
         }
 
         const response = await fetch(
-          "http://localhost:5000/api/payments/my",
+          `${API_URL}/api/payments/my`,
           {
             headers: {
               Authorization: `Bearer ${tokenData.token}`,

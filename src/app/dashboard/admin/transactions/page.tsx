@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { authClient } from "@/lib/auth-client";
+import API_URL from "@/lib/api";
 import { toast } from "sonner";
 
 import {
@@ -41,7 +42,7 @@ if (!token) {
   throw new Error("Authentication token not found");
 }
         const res = await fetch(
-          "http://localhost:5000/api/admin/payments",
+          `${API_URL}/api/admin/payments`,
           {
             headers: {
             Authorization: `Bearer ${token}`,
